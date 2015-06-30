@@ -1,0 +1,105 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title></title>
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.2.0/mapbox.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.2.0/mapbox.css' rel='stylesheet' />
+  <style>
+    body { margin:0; padding:0; }
+    .map { position:absolute; top:0; bottom:0; width:100%; }
+  </style>
+</head>
+<body>
+
+  <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css' rel='stylesheet' />
+  <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.Default.css' rel='stylesheet' />
+<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.min.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.mapbox.css' rel='stylesheet' />
+<!--[if lt IE 9]>
+<link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.ie.css' rel='stylesheet' />
+<![endif]-->
+<link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/css/font-awesome.min.css' rel='stylesheet' />
+
+<style>
+#Promo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #fff;
+    width: 150px;
+    padding:5px;
+}
+
+</style>
+
+<div id='map-one' class='map'> </div>
+
+<form id='Promo'>
+  <div style="background: #63b6e5"><input type='checkbox' name='filters' onclick='showPromo();' value='2014' checked> 2014</div>
+  <div style="background: #a3e46b"><input type='checkbox' name='filters' onclick='showPromo();' value='2013' checked> 2013</div>
+  <div style="background: #c091e6"><input type='checkbox' name='filters' onclick='showPromo();' value='2012' checked> 2012</div>
+  <div style="background: #f86767"><input type='checkbox' name='filters' onclick='showPromo();' value='2011' checked> 2011</div>
+</form>
+
+<script>
+// Here we don't use the second argument to map, since that would automatically
+// load in non-clustered markers from the layer. Instead we add just the
+// backing tileLayer, and then use the featureLayer only for its data.
+L.mapbox.accessToken = 'pk.eyJ1IjoiamVhbnJqYyIsImEiOiI2MzRlMjYyZjU5NTEzOTBlMWY2ZGJjZmQyYWFjMTA4YyJ9.KVH-icEXT-FdVJOjxDt7kg';
+
+
+var map = L.mapbox.map('map-one')
+    .setView( [48.822, 2.319], 10)
+    .addLayer(L.mapbox.tileLayer('jeanrjc.mj9o2l2e'));
+
+var overlays = L.layerGroup().addTo(map);
+
+// we create the 'layers' variable outside of the on('ready' callback
+// so that it can be accessible in the showStations function. Otherwise,
+// JavaScript scope would prevent you from accessing it.
+var layers;
+
+// Since featureLayer is an asynchronous method, we use the `.on('ready'`
+// call to only use its marker data once we know it is actually loaded.
+L.mapbox.featureLayer('jeanrjc.mj9o2l2e').on('ready', function(e) {
+        layers = e.target;
+        showPromo();
+    });
+
+var filters = document.getElementById('Promo').filters;
+
+// There are many ways to filter data. Mapbox.js has the .setFilter method,
+// but it only applies to L.mapbox.featureLayer layers, and that isn't what
+// we're creating - we're making marker groups in a MarkerClusterGroup layer.
+// Thus we distill filtering down to its essential part: an 'if' statement
+// in a loop.
+function showPromo() {
+    // first collect all of the checked boxes and create an array of strings
+    // like ['green', 'blue']
+    var list = [];
+    for (var i = 0; i < filters.length; i++) {
+        if (filters[i].checked) list.push(filters[i].value);
+    }
+    // then remove any previously-displayed marker groups
+    overlays.clearLayers();
+    // create a new marker group
+    var clusterGroup = new L.MarkerClusterGroup().addTo(overlays);
+    // and add any markers that fit the filtered criteria to that group.
+    layers.eachLayer(function(layer) {
+        if (list.indexOf(layer.feature.properties.Promo) !== -1) {
+            clusterGroup.addLayer(layer);
+        }
+    });
+}
+
+L.control.locate().addTo(map);
+
+</script>
+
+
+</body>
+</html>
